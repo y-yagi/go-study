@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	_ "github.com/lib/pq"
 	"log"
@@ -9,11 +10,11 @@ import (
 )
 
 type Post struct {
-	id         int
-	title      string
-	body       string
-	created_at time.Time
-	updated_at time.Time
+	Id         int       `json:"id"`
+	Title      string    `json:"title"`
+	Body       string    `json:"body"`
+	Created_at time.Time `json:"created_at"`
+	Updated_at time.Time `json:"updated_at"`
 }
 
 func getPosts(db *sql.DB) ([]Post, error) {
@@ -27,7 +28,7 @@ func getPosts(db *sql.DB) ([]Post, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&posts[i].id, &posts[i].title, &posts[i].body, &posts[i].created_at, &posts[i].updated_at); err != nil {
+		if err := rows.Scan(&posts[i].Id, &posts[i].Title, &posts[i].Body, &posts[i].Created_at, &posts[i].Updated_at); err != nil {
 			return nil, err
 		}
 		i += 1
@@ -54,6 +55,7 @@ func main() {
 	}
 
 	for _, post := range posts {
-		fmt.Printf("%s %s\n", post.title, post.body)
+		mapPost, _ := json.Marshal(post)
+		fmt.Println(string(mapPost))
 	}
 }
