@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	_ "github.com/lib/pq"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -15,6 +17,10 @@ type Post struct {
 	Body       string    `json:"body"`
 	Created_at time.Time `json:"created_at"`
 	Updated_at time.Time `json:"updated_at"`
+}
+
+type postHandler struct {
+	format string
 }
 
 func getPosts(db *sql.DB) ([]Post, error) {
@@ -41,8 +47,15 @@ func getPosts(db *sql.DB) ([]Post, error) {
 	return posts, nil
 }
 
+func (ph *postHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("debug log\n")
+	fmt.Fprint(w, ph.format)
+}
+
 func main() {
 	db, err := sql.Open("postgres", "user=yaginuma dbname=api_test")
+	var buffer bytes.Buffer
+
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -56,6 +69,14 @@ func main() {
 
 	for _, post := range posts {
 		mapPost, _ := json.Marshal(post)
-		fmt.Println(string(mapPost))
+		buffer.WriteString(string(mapPost))
 	}
+
+	ph := &postHandler{format: buffer.String()}
+
+	http.Handle("/posts", ph)
+	if err := http.ListenAndServe("localhost:3000", nil); err != nil {
+		log.Fatal("ListenAndServe", err)
+	}
+
 }
