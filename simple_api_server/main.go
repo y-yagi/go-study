@@ -20,7 +20,7 @@ type Post struct {
 }
 
 type postHandler struct {
-	format string
+	db *sql.DB
 }
 
 func getPosts(db *sql.DB) ([]Post, error) {
@@ -49,19 +49,10 @@ func getPosts(db *sql.DB) ([]Post, error) {
 
 func (ph *postHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Started %s %s for %s at %s\n", r.Method, r.RequestURI, r.RemoteAddr, time.Now().Format(time.RFC3339))
-	fmt.Fprint(w, ph.format)
-}
 
-func main() {
-	db, err := sql.Open("postgres", "user=yaginuma dbname=api_test")
 	var buffer bytes.Buffer
 
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	posts, err := getPosts(db)
+	posts, err := getPosts(ph.db)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -72,8 +63,18 @@ func main() {
 		buffer.WriteString(string(mapPost))
 	}
 
-	ph := &postHandler{format: buffer.String()}
+	fmt.Fprint(w, buffer.String())
+}
 
+func main() {
+	db, err := sql.Open("postgres", "user=yaginuma dbname=api_test")
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	ph := &postHandler{db: db}
 	http.Handle("/posts", ph)
 	if err := http.ListenAndServe("localhost:3000", nil); err != nil {
 		log.Fatal("ListenAndServe", err)
