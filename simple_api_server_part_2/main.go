@@ -12,6 +12,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 	"github.com/zenazn/goji"
+	"github.com/zenazn/goji/web"
 )
 
 var db *gorm.DB
@@ -32,7 +33,7 @@ func getPosts(db *gorm.DB) ([]Post, error) {
 	return posts, nil
 }
 
-func Posts(w http.ResponseWriter, r *http.Request) {
+func GetPosts(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Started %s %s for %s at %s\n", r.Method, r.RequestURI, r.RemoteAddr, time.Now().Format(time.RFC3339))
 
 	var buffer bytes.Buffer
@@ -51,6 +52,17 @@ func Posts(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, buffer.String())
 }
 
+func GetPost(c web.C, w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Started %s %s for %s at %s\n", r.Method, r.RequestURI, r.RemoteAddr, time.Now().Format(time.RFC3339))
+
+	var post Post
+
+	// really safe?
+	db.Where("id= ?", c.URLParams["id"]).First(&post)
+	mapPost, _ := json.Marshal(post)
+	fmt.Fprint(w, string(mapPost))
+}
+
 func main() {
 	var err error
 	db, err = gorm.Open("postgres", "user=yaginuma dbname=api_test")
@@ -60,7 +72,8 @@ func main() {
 		return
 	}
 
-	goji.Get("/posts", Posts)
+	goji.Get("/posts", GetPosts)
+	goji.Get("/posts/:id", GetPost)
 	flag.Set("bind", ":3000")
 	goji.Serve()
 }
