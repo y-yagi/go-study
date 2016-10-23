@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 type Post struct {
@@ -27,7 +28,7 @@ func getPosts(db *sql.DB) ([]Post, error) {
 	var posts []Post = make([]Post, 100)
 	var i = 0
 
-	rows, err := db.Query("SELECT * FROM posts limit 100")
+	rows, err := db.db.Query("SELECT * FROM posts limit 100")
 	if err != nil {
 		return nil, err
 	}
