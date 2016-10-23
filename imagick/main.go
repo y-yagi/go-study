@@ -8,29 +8,29 @@ func main() {
 
 	source := imagick.NewMagickWand()
 	lgtm := imagick.NewMagickWand()
+	result := imagick.NewMagickWand()
 
 	source.ReadImage("source.gif")
 	lgtm.ReadImage("lgtm.gif")
 
-	source.AddImage(lgtm)
-	lgtm.Destroy()
-	lgtm = source.CoalesceImages()
+	sourceWidth := source.GetImageWidth()
+	sourceHeight := source.GetImageHeight()
+	lgtm.ScaleImage(sourceWidth, sourceHeight)
 
+	coalescedImages := source.CoalesceImages()
 	source.Destroy()
-	source = imagick.NewMagickWand()
 
-	for i := 1; i < int(lgtm.GetNumberImages()); i++ {
-		lgtm.SetIteratorIndex(i)
-		tmpImage := lgtm.GetImage()
-		source.AddImage(tmpImage)
+	for i := 1; i < int(coalescedImages.GetNumberImages()); i++ {
+		coalescedImages.SetIteratorIndex(i)
+		tmpImage := coalescedImages.GetImage()
+		tmpImage.CompositeImage(lgtm, imagick.COMPOSITE_OP_OVER, 0, 0)
+		result.AddImage(tmpImage)
 		tmpImage.Destroy()
 	}
 
-	source.ResetIterator()
 	lgtm.Destroy()
+	coalescedImages.Destroy()
 
-	lgtm = source.CompareImageLayers(imagick.IMAGE_LAYER_COMPARE_ANY)
-	lgtm.SetOption("loop", "0")
-
-	lgtm.WriteImages("result.gif", true)
+	result.WriteImages("result.gif", true)
+	result.Destroy()
 }
