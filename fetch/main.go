@@ -9,21 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func fetch(url string) (body []byte, err error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, errors.Wrap(err, "get failed")
-	}
-
-	defer resp.Body.Close()
-
-	body, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.Wrap(err, "read failed")
-	}
-	return body, err
-}
-
 func main() {
 	if len(os.Args) == 1 {
 		fmt.Fprintln(os.Stderr, "Please specify url")
@@ -38,4 +23,18 @@ func main() {
 		}
 		fmt.Printf("%s", body)
 	}
+}
+func fetch(url string) (body []byte, err error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, errors.Wrap(err, "get failed")
+	}
+
+	defer resp.Body.Close()
+
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "read failed")
+	}
+	return body, err
 }
